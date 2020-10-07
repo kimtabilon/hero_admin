@@ -40,8 +40,6 @@ class AuthService {
     return _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 
-
-
   //Check if user exist
 
   Future doesNameAlreadyExist(String email,String fname,String lname, String mobile) async {

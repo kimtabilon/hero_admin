@@ -1,11 +1,11 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hero_admin/pages/forgotpassword.dart';
 import 'package:hero_admin/pages/navigation.dart';
-import 'package:hero_admin/pages/signup.dart';
 import 'package:hero_admin/widgets/provider_widget.dart';
 import 'package:hero_admin/services/auth_service.dart';
 
@@ -78,11 +78,23 @@ class _LoginState extends State<Login> {
                             try{
                               final auth = Provider.of(context).auth;
                               EasyLoading.show(status: 'loading...');
-                              User uid = await auth.signInWithEmailAndPassword(nameController.text.trim(), passwordController.text);
+                              var uid = await auth.signInWithEmailAndPassword(nameController.text.trim(), passwordController.text);
+
+
+                              final exist = await FirebaseFirestore.instance
+                                  .collection('admin')
+                                  .doc(uid)
+                                  .get();
+                              if(exist == null){
+                                errorMessage = "No Admin User";
+                              }
+
+
                             } catch (error) {
                               errorMessage = error.code;
                               print(errorMessage);
                             }
+
                             EasyLoading.dismiss();
                             setState(() => _isButtonDisabled = false);
                             if (errorMessage != null) {
@@ -101,6 +113,10 @@ class _LoginState extends State<Login> {
                               );
 
                             }else{
+
+
+
+
 
                               nameController.text = "";
                               passwordController.text = "";
@@ -139,22 +155,7 @@ class _LoginState extends State<Login> {
                                 },
                               ),
                             ),
-                            Spacer(),
-                            Text("New Hero?",
-                                style: TextStyle(color: Colors.white,fontSize: 15, fontStyle: FontStyle.italic)),
-                            InkWell(
-                              child: new InkWell(
-                                child: new Text('SIGN UP',
-                                    style: TextStyle(color: Colors.white,fontSize: 15,fontWeight: FontWeight.bold)),
-                                onTap: _isButtonDisabled ? null :(){
 
-                                        Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => SignUp()));
-
-                                },
-                              ),
-                            )
                           ],
                         ),
                       ),

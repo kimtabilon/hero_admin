@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hero_admin/pages/edit.dart';
 import 'package:hero_admin/pages/review.dart';
-import 'package:hero_admin/pages/setting.dart';
 import 'package:hero_admin/pages/navigation.dart';
 import 'package:hero_admin/widgets/provider_widget.dart';
 import 'package:hero_admin/services/auth_service.dart';
@@ -83,19 +82,12 @@ class _AccountState extends State<Account> {
 
                                                             SizedBox(height: 10),
 
-                                                             Text(user.city +","+ user.province
-                                                                 ,style: TextStyle(fontSize: 12)),
 
-                                                            SizedBox(height: 10),
 
-                                                                   Row(
-                                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                                      children: [
                                                                         FlatButton(
-                                                                            shape: RoundedRectangleBorder(
-                                                                                borderRadius: BorderRadius.circular(0.0),
-                                                                                side: BorderSide(color: Colors.black)
-                                                                            ),
+                                                                            color: Color(0xFF13869f),
+                                                                            minWidth: 240,
+
                                                                             onPressed: (){
                                                                               Navigator.push(
                                                                                   context,
@@ -103,37 +95,10 @@ class _AccountState extends State<Account> {
 
                                                                             },
                                                                             child: Text("EDIT PROFILE", style: TextStyle(
-                                                                                color: Colors.black,fontSize: 12.0,
+                                                                                color: Colors.white,fontSize: 12.0,
                                                                             ))),
                                                                         SizedBox(width: 15),
-                                                                        FlatButton(
-                                                                            shape: RoundedRectangleBorder(
-                                                                                borderRadius: BorderRadius.circular(0.0),
-                                                                                side: BorderSide(color: Colors.black)
-                                                                            ),
-                                                                            onPressed: (){
-                                                                              Navigator.push(
-                                                                                  context,
-                                                                                  MaterialPageRoute(builder: (context) => Setting()));
 
-                                                                            },
-                                                                            child: Text("EDIT SETTINGS", style: TextStyle(
-                                                                              color: Colors.black,fontSize: 12.0,
-                                                                            ))),
-                                                                      ],
-                                                                   ),
-
-                                                                   FlatButton(
-                                                                       color: Color(0xFF13869f),
-                                                                        minWidth: 240,
-                                                                       onPressed: (){
-                                                                         Navigator.push(
-                                                                             context,
-                                                                             MaterialPageRoute(builder: (context) => Review()));
-                                                                       },
-                                                                       child: Text("VIEW MY REVIEWS", style: TextStyle(
-                                                                         color: Colors.white
-                                                                       ))),
                                                                        FlatButton(
                                                                            minWidth: 240,
                                                                            shape: RoundedRectangleBorder(
@@ -152,45 +117,6 @@ class _AccountState extends State<Account> {
                                                                            child: Text("LOG OUT", style: TextStyle(
                                                                                color: Colors.black
                                                                            ))),
-                                                                       SizedBox(height: 20),
-                                                                       Row(
-                                                                         mainAxisAlignment: MainAxisAlignment.center,
-                                                                         crossAxisAlignment: CrossAxisAlignment.start,
-                                                                         children: [
-                                                                           Column(
-                                                                             children: [
-                                                                               Text("0", style: TextStyle(
-                                                                                   color: Colors.red,
-                                                                                 fontSize: 25
-                                                                               )),
-                                                                               SizedBox(height: 10),
-                                                                               Text("JOBS"),
-                                                                               Text("PENDING"),
-                                                                             ],
-                                                                           ),
-                                                                           Container(width:50,height: 50, child: VerticalDivider(color: Colors.grey)),
-                                                                           Column(
-                                                                             children: [
-                                                                               Text("0", style: TextStyle(
-                                                                                   fontSize: 25
-                                                                               )),
-                                                                               SizedBox(height: 10),
-                                                                               Text("JOBS"),
-                                                                               Text("COMPLETED"),
-                                                                             ],
-                                                                           ),
-                                                                           Container(width:50,height: 50, child: VerticalDivider(color: Colors.grey)),
-                                                                           Column(
-                                                                             children: [
-                                                                               Text("0", style: TextStyle(
-                                                                                   fontSize: 25
-                                                                               )),
-                                                                               SizedBox(height: 10),
-                                                                               Text("REVIEWS"),
-                                                                             ],
-                                                                           ),
-                                                                         ],
-                                                                       ),
                                                                        SizedBox(height: 20),
                                                                        Divider(thickness:1,color: Colors.grey),
                                                                        SizedBox(height: 20),
@@ -264,9 +190,7 @@ class UserData {
   final photo;
   final first_name;
   final last_name;
-  final province;
-  final city;
-  const UserData(this.email,this.photo,this.first_name, this.last_name,this.province,this.city);
+  const UserData(this.email,this.photo,this.first_name, this.last_name);
 }
 
 
@@ -279,15 +203,12 @@ Stream<List<UserData>> getUserDataSnapshots(BuildContext context) async* {
   await for (var profileSnapshot in profile) {
     for (var profileDoc in profileSnapshot.docs) {
       var ProfileData;
-      var emailSnapshot = await FirebaseFirestore.instance.collection("client").where('profile_id', isEqualTo: uid).get();
-      var addressSnapshot = await FirebaseFirestore.instance.collection("address").where('profile_id', isEqualTo: uid).get();
+      var emailSnapshot = await FirebaseFirestore.instance.collection("admin").doc(uid).get();
       ProfileData = UserData(
-          emailSnapshot.docs[0].get('email'),
+          emailSnapshot.get('email'),
           profileSnapshot.docs[0].get('photo'),
           profileSnapshot.docs[0].get('first_name'),
           profileSnapshot.docs[0].get('last_name'),
-          addressSnapshot.docs[0].get('province'),
-          addressSnapshot.docs[0].get('city'),
           );
 
       data.add(ProfileData);

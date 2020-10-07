@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:hero_admin/pages/account.dart';
+import 'package:hero_admin/pages/navigation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
@@ -22,26 +23,13 @@ import 'package:philippines/province.dart';
 import 'package:path/path.dart' as Path;
 
 final _formKey = GlobalKey<FormState>();
+
 final TextEditingController nameController = TextEditingController();
 final TextEditingController lnameController = TextEditingController();
-final TextEditingController mobileController = TextEditingController();
-final TextEditingController genderController = TextEditingController();
 final TextEditingController emailController = TextEditingController();
-final TextEditingController birthdayController = TextEditingController();
-final TextEditingController addressController = TextEditingController();
 final TextEditingController PasswordController = TextEditingController();
 final TextEditingController ConPasswordController = TextEditingController();
 final TextEditingController OldPasswordController = TextEditingController();
-
-final TextEditingController streetController = TextEditingController();
-final TextEditingController provinceController = TextEditingController();
-final TextEditingController cityController = TextEditingController();
-final TextEditingController barangayController = TextEditingController();
-final TextEditingController zipController = TextEditingController();
-
-final TextEditingController EducationalBackgroundController = TextEditingController();
-final TextEditingController CertificationController = TextEditingController();
-final TextEditingController WorkExperienceController = TextEditingController();
 
 class Edit extends StatefulWidget {
   @override
@@ -54,6 +42,7 @@ class _EditState extends State<Edit>{
   @override
 
   final db = FirebaseFirestore.instance;
+
   DateTime selectedDate = DateTime.now();
   File _image;
   final picker = ImagePicker();
@@ -115,32 +104,10 @@ class _EditState extends State<Edit>{
 
             if (_formKey.currentState.validate()) {
               setState(() => _isButtonDisabled = false);
-              Navigator.pop(context, true);
               final uid = await Provider.of(context).auth.getCurrentUID();
               var addressSnapshot = await FirebaseFirestore.instance.collection("address").where('profile_id', isEqualTo: uid).get();
-              if(title == "Address") {
-                await db.collection('address').doc(addressSnapshot.docs[0].id)
-                    .update(
-                    {
-                      'street': streetController.text,
-                      'province': provinceController.text,
-                      'city': cityController.text,
-                      'barangay': barangayController.text,
-                      'zip': zipController.text,
-                    })
-                    .then((value) {
-                  _awesomeDialogResult(
-                      "Success", "Info Updated Successfully", context,
-                      DialogType.SUCCES, Icons.check_circle);
-                }
-                )
-                    .catchError((error) {
-                      _awesomeDialogResult(
-                          "Error", error, context, DialogType.ERROR,
-                          Icons.cancel);
-                    }
-                );
-              }else if(title == "Password"){
+
+              if(title == "Password"){
 
                 User firebaseUser;
                 String errorMessage;
@@ -152,12 +119,15 @@ class _EditState extends State<Edit>{
 
                         uidResult.updatePassword(PasswordController.text.trim()).then((_) async {
 
-                          var heroSnapshot = await FirebaseFirestore.instance.collection("client").where('profile_id', isEqualTo: uidResult).get();
-                          await db.collection('client').doc(heroSnapshot.docs[0].id)
+                          var heroSnapshot = await FirebaseFirestore.instance.collection("admin").doc(uid).get();
+                          await db.collection('admin').doc(heroSnapshot.id)
                               .update(
                               {
                                 'password': PasswordController.text.trim(),
                               });
+                          OldPasswordController.text = "";
+                          PasswordController.text = "";
+                          ConPasswordController.text = "";
                             _awesomeDialogResult(
                                 "Success", "Info Updated Successfully", context,
                                 DialogType.SUCCES, Icons.check_circle);
@@ -249,299 +219,9 @@ class _EditState extends State<Edit>{
   }
 
 
-  _buildTextField(
-      TextEditingController controller, String labelText) {
+  _buildTextField(TextEditingController controller, String labelText) {
 
-
-    List<Province> _provinces = getProvinces();
-    var _currentSelectedValue = _provinces.first;
-    provinceController.text = _currentSelectedValue.name;
-
-    List<City> _cities = getCities();
-    _cities.removeWhere((city) => city.province != "MM");
-    City _currentSelectedCity = _cities.first;
-    cityController.text = _currentSelectedCity.name;
-
-    List<String> _gender = ['None','Male','Female'];
-    String _currentSelectedGender = genderController.text;
-
-    if (labelText == "Birthday") {
-      return StatefulBuilder(
-          builder: (context, setState) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 150,
-                  padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blue),
-                      color: Color(0xFFffffff).withOpacity(0.4)),
-                  child: Center(
-                    child: Text(
-                      "${selectedDate.toLocal()}".split(' ')[0],
-                      style: TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 5),
-                RaisedButton(
-                  onPressed: () async {
-                    final DateTime picked = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate, // Refer step 1
-                      firstDate: DateTime(1900),
-                      lastDate: DateTime(2021),
-                    );
-                    if (picked != null && picked != selectedDate)
-                      setState(() {
-                        selectedDate = picked;
-                        birthdayController.text =
-                            DateFormat('yyyy-MM-dd').format(picked);
-                      });
-                  },
-                  child: Text(
-                    'Select date',
-                    style:
-                    TextStyle(color: Colors.white,
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  color: Color(0xFF93ca68),
-                ),
-
-              ],
-            );
-          }
-      );
-    }else if(labelText == "Address") {
-      return StatefulBuilder(
-          builder: (context, setState) {
-            return Scrollbar(
-              controller: _scrollDialogController, // <---- Here, the controller
-              isAlwaysShown: true, // <---- Required
-              child: SingleChildScrollView(
-                controller: _scrollDialogController,
-                child: Column(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blue),
-                          color: Color(0xFFffffff).withOpacity(0.4)),
-                      child: TextFormField(
-                        validator: (value) {
-                          if (value.isEmpty) {
-                            return 'This field is required.';
-                          }
-                          return null;
-                        },
-                        controller: streetController,
-                        style: TextStyle(fontSize: 15),
-                        decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 10),
-                            labelText: "Street",
-                            labelStyle: TextStyle(color: Colors.blue,
-                                fontStyle: FontStyle.italic),
-
-                            // prefix: Icon(icon),
-                            border: InputBorder.none),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blue),
-                          color: Color(0xFFffffff).withOpacity(0.4)),
-                      child: DropdownButtonFormField(
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 10),
-                            labelText: "Province",
-                            labelStyle: TextStyle(color: Colors.blue,
-                                fontStyle: FontStyle.italic),
-
-                            // prefix: Icon(icon),
-                            border: InputBorder.none),
-                        value: _currentSelectedValue,
-                        items: _provinces.map((Province value) {
-                          return DropdownMenuItem<Province>(
-                            value: value,
-                            child: Text(value.name),
-                          );
-                        }).toList(),
-                        onChanged: (Province newValue) {
-                          setState(() {
-                            List<City> cities = getCities();
-
-                            cities.removeWhere((city) =>
-                            city.province != newValue.id);
-
-                            _cities = cities;
-                            _currentSelectedValue = newValue;
-                            provinceController.text = newValue.name;
-                            _currentSelectedCity = null;
-                          });
-                        },
-
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blue),
-                          color: Color(0xFFffffff).withOpacity(0.4)),
-                      child: DropdownButtonFormField(
-                        isExpanded: true,
-                        validator: (value) {
-                          if (value == null) {
-                            return 'This field is required.';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 10),
-                            labelText: "City",
-                            labelStyle: TextStyle(color: Colors.blue,
-                                fontStyle: FontStyle.italic),
-
-                            // prefix: Icon(icon),
-                            border: InputBorder.none),
-                        value: _currentSelectedCity,
-                        items: _cities?.map((City value) {
-                          return DropdownMenuItem<City>(
-                            value: value,
-                            child: Text(value.name),
-                          );
-                        })?.toList(),
-                        onChanged: (City newValue) {
-                          setState(() {
-                            _currentSelectedCity = newValue;
-                            cityController.text = _currentSelectedCity.name;
-                          });
-                        },
-
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blue),
-                          color: Color(0xFFffffff).withOpacity(0.4)),
-                      child: TextFormField(
-                        validator: (value) {
-                          if (value.isEmpty) {
-                            return 'This field is required.';
-                          }
-                          return null;
-                        },
-                        controller: barangayController,
-                        style: TextStyle(fontSize: 15),
-                        decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 10),
-                            labelText: "Barangay",
-                            labelStyle: TextStyle(color: Colors.blue,
-                                fontStyle: FontStyle.italic),
-
-                            // prefix: Icon(icon),
-                            border: InputBorder.none),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blue),
-                          color: Color(0xFFffffff).withOpacity(0.4)),
-                      child: TextFormField(
-                        validator: (value) {
-                          if (value.isEmpty) {
-                            return 'This field is required.';
-                          }
-                          return null;
-                        },
-                        controller: zipController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: <TextInputFormatter>[
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-                        ],
-                        style: TextStyle(fontSize: 15),
-                        decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 10),
-                            labelText: "ZIP",
-                            labelStyle: TextStyle(color: Colors.blue,
-                                fontStyle: FontStyle.italic),
-
-                            // prefix: Icon(icon),
-                            border: InputBorder.none),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-      );
-    }else if (labelText == "Gender") {
-
-      return StatefulBuilder(
-          builder: (context, setState) {
-            return Column(
-              children: [
-
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blue),
-                      color: Color(0xFFffffff).withOpacity(0.4)),
-                  child: DropdownButtonFormField(
-                    isExpanded: true,
-                    validator: (value) {
-                      if (value == null) {
-                        return 'This field is required.';
-                      }
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 10),
-                        labelText: "Gender",
-                        labelStyle: TextStyle(color: Colors.blue,
-                            fontStyle: FontStyle.italic),
-
-                        // prefix: Icon(icon),
-                        border: InputBorder.none),
-                    value: _currentSelectedGender,
-                    items: _gender?.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    })?.toList(),
-                    onChanged: (String newValue) {
-                      setState(() {
-                        genderController.text = newValue;
-                      });
-                    },
-
-                  ),
-                ),
-
-              ],
-            );
-          }
-      );
-
-    }else if (labelText == "Password") {
+if (labelText == "Password") {
       return Column(
         children: [ Container(
           padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
@@ -736,7 +416,7 @@ class _EditState extends State<Edit>{
           onPressed: () =>
               Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Account()))
+                  MaterialPageRoute(builder: (context) => Navigation()))
           ,
         ),
         centerTitle: true,
@@ -879,207 +559,6 @@ class _EditState extends State<Edit>{
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text("Mobile Number",
-                                                style: TextStyle(fontSize: 15)),
-                                            Row(
-                                              children: [
-                                                InkWell(
-                                                  onTap: _isButtonDisabled
-                                                      ? () {}
-                                                      : () async {
-                                                    setState(() =>
-                                                    _isButtonDisabled = true);
-                                                    mobileController.text = user.contact;
-                                                    //EasyLoading.show(status: 'loading...');
-                                                    String result = await _awesomeDialogEdit(
-                                                      'mobile',
-                                                      'Mobile Number',
-                                                      mobileController,
-                                                    );
-                                                  },
-                                                  child:
-                                                  Row(
-                                                    children: [
-                                                      Text(user.contact),
-                                                      Icon(Icons.keyboard_arrow_right),
-                                                    ],
-                                                  ),
-
-                                                )
-                                              ],
-                                            ),
-
-
-                                          ],
-                                        ),
-                                        SizedBox(height: 10),
-                                        Divider(thickness: 1, color: Colors.grey),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text("Gender",
-                                                style: TextStyle(fontSize: 15)),
-                                            Row(
-                                              children: [
-                                                InkWell(
-                                                  onTap: _isButtonDisabled
-                                                      ? () {}
-                                                      : () async {
-                                                    setState(() =>
-                                                    _isButtonDisabled = true);
-                                                    genderController.text = user.gender;
-                                                    //EasyLoading.show(status: 'loading...');
-                                                    String result = await _awesomeDialogEdit(
-                                                      'gender',
-                                                      'Gender',
-                                                      genderController,
-                                                    );
-                                                  },
-                                                  child:
-                                                  Row(
-                                                    children: [
-                                                      Text(user.gender),
-                                                      Icon(Icons.keyboard_arrow_right),
-                                                    ],
-                                                  ),
-
-                                                )
-                                              ],
-                                            ),
-
-
-                                          ],
-                                        ),
-
-                                        // SizedBox(height: 10),
-                                        // Divider(thickness:1,color: Colors.grey),
-                                        // SizedBox(height: 10),
-                                        // Row(
-                                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        //   children: [
-                                        //     Text("Email Address",
-                                        //         style: TextStyle( fontSize: 15 )),
-                                        //     Row(
-                                        //       children: [
-                                        //         InkWell(
-                                        //           onTap:  _isButtonDisabled ? (){} : () async {
-                                        //             setState(() => _isButtonDisabled = true);
-                                        //             lnameController.text = snapshot.data.documents[index].get('Mobile');
-                                        //             //EasyLoading.show(status: 'loading...');
-                                        //             String result = await _awesomeDialogEdit(
-                                        //                 'Mobile',
-                                        //                 'Mobile Number',
-                                        //                 lnameController,
-                                        //                 context
-                                        //             );
-                                        //           },
-                                        //           child:
-                                        //           Row(
-                                        //             children: [
-                                        //               Text(snapshot.data.documents[index].get('Mobile')),
-                                        //               Icon(Icons.keyboard_arrow_right),
-                                        //             ],
-                                        //           ),
-                                        //
-                                        //         )
-                                        //       ],
-                                        //     ),
-                                        //
-                                        //
-                                        //   ],
-                                        // ),
-                                        SizedBox(height: 10),
-                                        Divider(thickness: 1, color: Colors.grey),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text("Birthday",
-                                                style: TextStyle(fontSize: 15)),
-                                            Row(
-                                              children: [
-                                                InkWell(
-                                                  onTap: _isButtonDisabled
-                                                      ? () {}
-                                                      : () async {
-                                                    setState(() =>
-                                                    _isButtonDisabled = true);
-                                                    birthdayController.text = user.birthday;
-
-                                                    //EasyLoading.show(status: 'loading...');
-                                                    String result = await _awesomeDialogEdit(
-                                                      'birthday',
-                                                      'Birthday',
-                                                      birthdayController,
-
-                                                    );
-                                                  },
-                                                  child:
-                                                  Row(
-                                                    children: [
-                                                      Text(user.birthday),
-                                                      Icon(Icons.keyboard_arrow_right),
-                                                    ],
-                                                  ),
-
-                                                )
-                                              ],
-                                            ),
-
-
-                                          ],
-                                        ),
-                                        SizedBox(height: 10),
-                                        Divider(thickness: 1, color: Colors.grey),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text("Address",
-                                                style: TextStyle(fontSize: 15)),
-                                            Row(
-                                              children: [
-                                                InkWell(
-                                                  onTap: _isButtonDisabled
-                                                      ? () {}
-                                                      : () async {
-                                                    setState(() =>
-                                                    _isButtonDisabled = true);
-
-                                                    streetController.text = user.street;
-                                                    provinceController.text = user.province;
-                                                    cityController.text = user.city;
-                                                    barangayController.text = user.barangay;
-                                                    zipController.text = user.zip;
-                                                    //EasyLoading.show(status: 'loading...');
-                                                    String result = await _awesomeDialogEdit(
-                                                      'address',
-                                                      'Address',
-                                                      addressController,
-                                                    );
-                                                  },
-                                                  child:
-                                                  Row(
-                                                    children: [
-                                                      Text('edit'),
-                                                      Icon(Icons.keyboard_arrow_right),
-                                                    ],
-                                                  ),
-
-                                                )
-                                              ],
-                                            ),
-
-
-                                          ],
-                                        ),
-                                        SizedBox(height: 10),
-                                        Divider(thickness: 1, color: Colors.grey),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
                                             Text("Password",
                                                 style: TextStyle(fontSize: 15)),
                                             Row(
@@ -1141,14 +620,10 @@ class _EditState extends State<Edit>{
 
 
 class UserData {
-  final email,password,photo,first_name,last_name,
-      birthday,gender,contact,
-      province,city,barangay,street,zip;
+  final email,password,photo,first_name,last_name;
 
   const UserData(
-      this.email,this.password,this.photo,this.first_name, this.last_name,
-      this.birthday,this.gender,this.contact,
-      this.province,this.city,this.barangay,this.street,this.zip);
+      this.email,this.password,this.photo,this.first_name, this.last_name);
 }
 
 Stream<List<UserData>> getUserDataSnapshots(BuildContext context) async* {
@@ -1160,31 +635,19 @@ Stream<List<UserData>> getUserDataSnapshots(BuildContext context) async* {
   await for (var profileSnapshot in profile) {
     for (var profileDoc in profileSnapshot.docs) {
       var ProfileData;
-      var emailSnapshot = await FirebaseFirestore.instance.collection("hero").where('profile_id', isEqualTo: uid).get();
-      var heroSnapshot = await FirebaseFirestore.instance.collection("hero_info").where('profile_id', isEqualTo: uid).get();
-      var addressSnapshot = await FirebaseFirestore.instance.collection("address").where('profile_id', isEqualTo: uid).get();
-      var contactSnapshot = await FirebaseFirestore.instance.collection("contact").where('profile_id', isEqualTo: uid).get();
+      var emailSnapshot = await FirebaseFirestore.instance.collection("admin").doc(uid).get();
       ProfileData = UserData(
-        emailSnapshot.docs[0].get('email'),
-        emailSnapshot.docs[0].get('password'),
+        emailSnapshot.get('email'),
+        emailSnapshot.get('password'),
         profileSnapshot.docs[0].get('photo'),
         profileSnapshot.docs[0].get('first_name'),
         profileSnapshot.docs[0].get('last_name'),
-        profileSnapshot.docs[0].get('birthday'),
-        profileSnapshot.docs[0].get('gender'),
-        contactSnapshot.docs[0].get('value'), // mobile
-        addressSnapshot.docs[0].get('province'),
-        addressSnapshot.docs[0].get('city'),
-        addressSnapshot.docs[0].get('barangay'),
-        addressSnapshot.docs[0].get('street'),
-        addressSnapshot.docs[0].get('zip'),
       );
 
       data.add(ProfileData);
     }
     yield data;
   }
-
 
 }
 

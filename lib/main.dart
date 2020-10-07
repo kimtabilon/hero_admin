@@ -1,13 +1,11 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:hero_admin/pages/account.dart';
 import 'package:hero_admin/pages/edit.dart';
-import 'package:hero_admin/pages/home.dart';
-import 'package:hero_admin/pages/homepage.dart';
 import 'package:hero_admin/pages/login.dart';
 import 'package:hero_admin/pages/navigation.dart';
-import 'package:hero_admin/pages/signup.dart';
 import 'package:hero_admin/services/auth_service.dart';
 import 'package:hero_admin/widgets/provider_widget.dart';
 
@@ -18,16 +16,10 @@ void main() async{
 
   runApp(Provider(
     auth: AuthService(),
-    child: MaterialApp(
+    child: GetMaterialApp(
       title: 'Hero Partner',
       debugShowCheckedModeBanner: false,
       home: HomeController(),
-      routes: <String, WidgetBuilder>{
-        '/signUp' : (BuildContext context) => SignUp(),
-        '/login' : (BuildContext context) => Login(),
-        '/home' : (BuildContext context) => Home(),
-        '/navigation' : (BuildContext context) => Navigation(),
-      },
       theme: ThemeData(
         brightness: Brightness.light,
 
@@ -55,7 +47,7 @@ class HomeController extends StatelessWidget {
         builder: (context, AsyncSnapshot<String> snapshot){
             if(snapshot.connectionState == ConnectionState.active){
               final bool signedIn = snapshot.hasData;
-              return signedIn ? Navigation() : Home();
+              return signedIn ? Navigation() : Login();
             }
               return CircularProgressIndicator();
           }

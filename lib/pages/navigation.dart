@@ -1,18 +1,16 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:hero_admin/main.dart';
 import 'package:hero_admin/pages/account.dart';
+import 'package:hero_admin/pages/categories.dart';
 import 'package:hero_admin/pages/help.dart';
-import 'package:hero_admin/pages/home.dart';
-import 'package:hero_admin/pages/homepage.dart';
 import 'package:hero_admin/pages/inbox.dart';
-import 'package:hero_admin/pages/job.dart';
 import 'package:hero_admin/pages/login.dart';
+import 'package:hero_admin/pages/manage_services.dart';
 import 'package:hero_admin/pages/review.dart';
-import 'package:hero_admin/pages/setting.dart';
+import 'package:hero_admin/pages/services.dart';
 
 class Navigation extends StatefulWidget {
 
@@ -29,7 +27,7 @@ class _NavigationState extends State<Navigation> {
   PageController _myPage;
   var selectedPage;
 
-  int _currentIndex = 2;
+  int _currentIndex = 0;
 
   void onTappedBar(int index){
     setState(() {
@@ -41,8 +39,8 @@ class _NavigationState extends State<Navigation> {
   @override
   void initState() {
     super.initState();
-    _myPage = PageController(initialPage: 2);
-    selectedPage = 2;
+    _myPage = PageController(initialPage: 0);
+    selectedPage = 0;
   }
 
   @override
@@ -60,11 +58,9 @@ class _NavigationState extends State<Navigation> {
           controller: _myPage,
           children: <Widget>[
             Account(),
-            Job(),
-            HomePage(),
-            Inbox(),
-            Help(),
-            Setting(),
+            ManageServices(),
+            // Help(),
+            // Inbox(),
           ],
         ),
 
@@ -76,10 +72,9 @@ class _NavigationState extends State<Navigation> {
               backgroundColor: Color(0xFF93ca68),
             items: [
               TabItem(icon: Icons.account_circle, title: 'My Account'),
-              TabItem(icon: Icons.card_travel, title: 'Jobs'),
-              TabItem(icon: Icons.home, title: 'Home'),
-              TabItem(icon: Icons.email, title: 'Inbox'),
-              TabItem(icon: Icons.help, title: 'Help'),
+              TabItem(icon: Icons.design_services, title: 'Services'),
+              // TabItem(icon: Icons.email, title: 'Inbox'),
+              // TabItem(icon: Icons.help, title: 'Help'),
             ],
             initialActiveIndex: _currentIndex,//optional, default as 0
             onTap:onTappedBar,
